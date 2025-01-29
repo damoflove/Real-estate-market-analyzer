@@ -8,7 +8,7 @@ def safe_str_convert(series):
 
 def main():
     st.title("Real Estate Market Analyzer")
-    st.write("Upload your rental data in CSV format to calculate average prices and listing counts.")
+    st.write("Upload your data in CSV format to calculate average prices and listing counts.")
 
     uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
 
