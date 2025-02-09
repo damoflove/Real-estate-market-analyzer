@@ -64,13 +64,25 @@ def main():
                 )
 
             # Drop rows with missing critical data
-            df = df.dropna(subset=['price', 'zipcode'])
+            df = df.dropna(subset=['price', 'zipcode', 'property_type', 'sqft'])
 
-            # Group and aggregate data
-            grouped = df.groupby(['zipcode', 'beds', 'baths']).agg(
-                Average_Price=('price', 'mean'),
-                Count=('price', 'size')
-            ).reset_index()
+            # Create a function to filter data by +/-150 sqft
+            def filter_sqft(group):
+                reference_sqft = group['sqft'].median()
+                return group[(group['sqft'] >= reference_sqft - 150) & (group['sqft'] <= reference_sqft + 150)]
+
+            # Apply grouping and filtering
+            grouped = (
+                df.groupby(['property_type', 'zipcode', 'beds', 'baths'])
+                .apply(filter_sqft)
+                .reset_index(drop=True)  # Reset index before final aggregation
+                .groupby(['property_type', 'zipcode', 'beds', 'baths'])
+                .agg(
+                    Average_Price=('price', 'mean'),
+                    Count=('price', 'size')
+                )
+                .reset_index()  # Reset index for proper output
+            )
 
             # Filter for meaningful results (at least 3 listings)
             filtered_result = grouped[grouped['Count'] >= 3]
@@ -92,7 +104,7 @@ def main():
             st.download_button(
                 label="Download Average Price Results",
                 data=csv_data,
-                file_name='average_prices.csv',
+                file_name='filtered__averages__prices.csv',
                 mime='text/csv'
             )
 
